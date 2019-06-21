@@ -1,0 +1,85 @@
+{
+    // https://code.visualstudio.com/docs/editor/tasks-appendix
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "build",
+                "-o",
+                "priceBreachChecker"
+            ],
+            "options": {
+                "env": {
+                    "GOOS": "linux",
+                    "GOARCH": "amd64"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Zip",
+            "command": "zip",
+            "args": [
+                "priceBreachChecker.zip",
+                "priceBreachChecker",
+                "appSettings.json"
+            ],
+            "dependsOn": [
+                "Build"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "CreateAndDeploy",
+            "command": "aws",
+            "type": "shell",
+            "args": [
+                "lambda",
+                "create-function",
+                "--function-name",
+                "priceBreachChecker",
+                "--region",
+                "us-east-2",
+                "--profile",
+                "default",
+                "--role",
+                "arn:aws:iam::901643335044:role/service-role/woof_garden_canary",
+                "--handler",
+                "priceBreachChecker",
+                "--runtime",
+                "go1.x",
+                "--zip-file",
+                "fileb://./priceBreachChecker.zip"
+            ],
+            "options": {},
+            "problemMatcher": [],
+            "dependsOn":[ "Zip" ]
+        },
+        {
+            "label": "UpdateAndDeploy",
+            "command": "aws",
+            "type": "shell",
+            "args": [
+                "lambda",
+                "update-function-code",
+                "--function-name",
+                "priceBreachChecker",
+                "--region",
+                "us-east-2",
+                "--profile",
+                "default",
+                "--zip-file",
+                "fileb://./priceBreachChecker.zip"
+            ],
+            "options": {},
+            "problemMatcher": [],
+            "dependsOn":[ "Zip" ]
+        }
+    ]
+}
